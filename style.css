@@ -22,7 +22,7 @@ a {
     display: inline-block;
     color: rgb(87, 145, 245);
     background-color: var(--bg_color_lighter);
-    padding: 4px 12px;  
+    padding: 4px 8px;  
     margin: auto;
     border-radius: 8px;
     transition: 0.5s;
@@ -30,8 +30,15 @@ a {
 a:hover {
     filter: brightness(1.3); /* Легкий эффект при наведении */
 }
+.icon {
+    height: 1em;
+    width: auto;
+    filter: invert();
+    vertical-align: middle;
+    margin-right: 8px;
+}
 .maincontent {
     padding: 16px 32px;
-    margin-left: 10%;
-    margin-right: 10%;
+    margin-left: 5%;
+    margin-right: 5%;
 }
