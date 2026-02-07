@@ -1,44 +1,53 @@
 :root {
-    --bg_color: rgb(13, 13, 13);
-    --bg_color_lighter: rgb(25, 25, 25);
+    --bg-color: rgb(0,0,0);
+    --bg-color-secondary: rgb(15,15,15);
+    --bg-color-tri: rgb(25,25,25);
+    --fg-color:rgb(240,240,240);
+    --fg-color-secondary:rgb(255,255,255);
 }
 body {
-    align-items: center;
-    margin: 0;
-    display: block;
-    max-width: 100%;
-    background-color: var(--bg_color);
-    color: white;
-    box-sizing: border-box;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-}
-header {
-    padding: 8px 16px;
+    background-color: var(--bg-color);
+    color: var(--fg-color);
+    font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-size: 1.2em;
     text-align: center;
-    margin: auto;
-    background-color: var(--bg_color_lighter);
+    display: grid;
+    justify-content: center;
+    align-items: center;
+}
+h1 {
+    margin-bottom: 4px;
 }
 a {
-    display: inline-block;
-    color: rgb(87, 145, 245);
-    background-color: var(--bg_color_lighter);
-    padding: 4px 8px;  
-    margin: auto;
+    color: var(--fg-color);
+}
+.big_padding_horizontal {
+    padding-top: 6em;
+    padding-bottom: 6em;
+
+}
+.centered_div_left_text {
+    text-align: left; 
+    width: 50%;
+}
+.social-link {
+    width: fit-content;
+    padding: 8px;
+    background-color: var(--bg-color-secondary);
     border-radius: 8px;
-    transition: 0.5s;
+    border: 1px solid var(--bg-color-tri);
+    /* filter: saturate(0); */
+    transition: 0.5s ease-out;
 }
-a:hover {
-    filter: brightness(1.3); /* Легкий эффект при наведении */
+.social-link:hover {
+    filter: brightness(1.3);
 }
-.icon {
-    height: 1em;
+.icon{
     width: auto;
-    filter: invert();
+    height: 1em;
     vertical-align: middle;
     margin-right: 8px;
 }
-.maincontent {
-    padding: 16px 32px;
-    margin-left: 5%;
-    margin-right: 5%;
+.rounded {
+    border-radius: 50%;
 }
