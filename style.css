@@ -31,8 +31,22 @@ radial-gradient(at 81% 74%, hsla(235,12%,5%,1) 0px, transparent 50%);
     background-repeat: no-repeat;
     background-attachment: fixed;
     }
+.small_text {
+    font-size: calc(var(--font-size) * 0.6);
+}
 h1.near_text {
     margin-bottom: 8px;
+}
+h3.near_text {
+    margin-bottom: 8px;
+}
+h3.with_description {
+    margin-bottom: 0px;
+}
+div.h3_description {
+    margin-bottom: 8px;
+    margin-top: 0px;
+    font-size: calc(var(--font-size) * 0.6);
 }
 a {
     color: var(--fg-color);
