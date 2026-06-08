@@ -134,7 +134,7 @@ body {
 }
 
 .article {
-    width: var(--content-max-width);
+    max-width: var(--content-max-width);
     margin: 0 auto;
     padding: 0 1rem;
     
