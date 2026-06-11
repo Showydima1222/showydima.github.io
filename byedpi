@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Копирование</title>
+    <style>
+        body { margin: 0; }
+        button {
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            background: #0071e3;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:active { background: #004494; }
+    </style>
+</head>
+<body>
+
+<button onclick="copyText()">СКОПИРОВАТЬ</button>
+
+<script>
+    const textToCopy = "-d3+s -s6+s -d9+s -s12+s -d15+s -s20+s -d25+s -s30+s -d35+s";
+
+    function copyText() {
+        navigator.clipboard.writeText(textToCopy)
+            .then(() => alert("Скопировано!"))
+            .catch(() => alert("Ошибка. Нужен HTTPS или localhost"));
+    }
+</script>
+
+</body>
+</html>
