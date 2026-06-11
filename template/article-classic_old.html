@@ -1,21 +1,22 @@
 <!DOCTYPE html>
 <!--(с) showydima, 2026 | showydima.ru | Showydima's website. Hello.-->
 <!--Partially inspired by artlebedev.ru-->
-<html lang="ru">
 <head>
     <meta charset="utf-8"/>
     <title>{{ ARTICLE_TITLE_SHORT }} – Showydima's webpage</title>
     <meta name="description" content="{{ ARTICLE_DESCRIPTION_SHORT }}">
     <link rel="icon" type="image/png" href="/assets/tg-pfp-48x.webp">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="/templates/article-classic.css">
+    <link rel="stylesheet" type="text/css" href="/template/article-classic.css">
 </head>
 <body>
     <header class="header">
         <div class="header-row top-row">
             <a href="/index.html" class="logotype">showy's website</a>
+            // {{ TITLE }}
             <div class="header-buttons">
-                </div>
+                <!-- in the future here will be theme settings (i think) -->
+            </div>
         </div>
         <div class="header-row bottom-row">
             <ul class="navigation-links">
@@ -33,19 +34,18 @@
         </div>
         {{ CONTENT }}
     </div> 
-    <footer class="footer">
+<footer class="footer">
         <div class="footer-content">
             <div class="footer-quote">showydima, 2026 © Права проданы Израилю. Сайт захвачен моссадом.</div>
             <div class="footer-links">
                 <a href="/index.html">На главную</a> • 
                 <a href="https://github.com/Showydima1222" target="_blank">GitHub</a>
             </div>
-            <div class="footer-meta">
-                HTML собран генератором: {{ BUILD_DATE }}<br>
-                Всего статей: {{ BUILD_ARTICLES_TOTAL_AMOUNT }}
-            </div> 
+                <!-- <div class="footer-meta">
+                    HTML собран генератором: {{ BUILD_DATE }}<br>
+                    Всего статей: {{ BUILD_ARTICLES_TOTAL_AMOUNT }}
+                </div> 
+                TODO: потом сделаю --> 
         </div>
     </footer>
-    {{ ANALYTICS_SCRIPT }}
 </body>
-</html>

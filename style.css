@@ -46,7 +46,7 @@ h3.with_description {
 div.h3_description {
     margin-bottom: 8px;
     margin-top: 0px;
-    font-size: calc(var(--font-size) * 0.6);
+
 }
 a {
     color: var(--fg-color);

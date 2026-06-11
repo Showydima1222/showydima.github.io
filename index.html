@@ -1,38 +1,51 @@
 <!DOCTYPE html>
-
+<!--(с) showydima, 2026 | showydima.ru | Showydima's website. Hello.-->
+<!--Partially inspired by artlebedev.ru-->
+<html lang="ru">
 <head>
-    <meta charset="utf-8" />
-    <title>Сайт showydima</title>
-    <meta name="description" content="Showydima's website">
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8"/>
+    <title>Главная – Showydima's webpage</title>
+    <meta name="description" content="Список всех доступных статей на сайте.">
     <link rel="icon" type="image/png" href="/assets/tg-pfp-48x.webp">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/templates/article-classic.css">
 </head>
-
 <body>
-    Привет! Меня зовут Дмитрий, занимаюсь недопрограммированием. Информация обо мне ниже:
-    <div class="centered_div_left_text">
-        <section id="links">
-            <h1 class="near_text">Мои ссылки</h1>
-            <h3 class="with_description">GitHub</h3> <div class="h3_description small_text">aka мои проекты</div>
-            <a href="https://github.com/Showydima1222/vantuzFetch">vantuzFetch</img></a> <b>ТЕКУЩИЙ ПРОЕКТ</b> </br>
-                <a href="https://github.com/Showydima1222">Мой профиль GitHub</img></a></br>
-                <a href="https://github.com/Showydima1222/vscode-tweaks">VSCode Tweaker</img></a></br>
-            <h3 class="near_text">Telegram</h3>
-                <a href="https://t.me/showydima">Личка</img></a></br>
-                <a href="https://t.me/showyfiles">Showydima's files</img></a>
-            <h3 class="near_text">Остальное</h3>
-                <a href="https://mynickname.com/showydima">MyNickname.com</a></br>
-        </section>
-    </div>
-    <div class="centered_div_left_text">
-        <section id="devices">
-            <h1 class="near_text">Что у меня</h1>
-            <h3 class="near_text">Mac Mini</h3>
-            <b>Комплектация:</b> 16/512</br>
-            <b>SOC:</b> Apple M4 <span class="small_text">(10 ядер)</span></br>
-            <b>MacOS:</b> 26.4.1 <span class="small_text">(на момент 16.04.2026)</span> </br>
-        </section>
-    </div>
-    <div style="opacity: 20%; font-size: 0.5em; margin-top: 3em;">self developed site, 2026 🪱🪠</div>
+    <header class="header">
+        <div class="header-row top-row">
+            <a href="/index.html" class="logotype">showy's website</a>
+            <div class="header-buttons">
+                </div>
+        </div>
+        <div class="header-row bottom-row">
+            <ul class="navigation-links">
+                <li><a href="/index.html">Главная</a></li>
+                <li><a href="https://github.com/Showydima1222" target="_blank">GitHub</a></li>
+                <li><a href="https://github.com/Showydima1222/vantuzFetch" target="_blank">vantuzFetch</a></li>
+            </ul>
+        </div>
+    </header>
+    <div class="header-spacer"></div>
+    <div class="article">
+        <div class="article-title">
+            <h1> Все статьи</h1>
+            <div class="tertiary_text near_text subtitle">Последнее обновление: 12.06.2026 00:48</div>
+        </div>
+        <ul style='list-style: none; padding: 0; line-height: 2;'><li><span class='tertiary_text'>[08.06.2026]</span> <a href='articles/1.html' style='color: var(--primary-text-color); text-decoration: none; border-bottom: 1px dashed var(--secondary-text-color);'>Тестовая статья</a></li><li><span class='tertiary_text'>[08.06.2026]</span> <a href='articles/2.html' style='color: var(--primary-text-color); text-decoration: none; border-bottom: 1px dashed var(--secondary-text-color);'>Байты килобайты и windows</a></li></ul>
+    </div> 
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-quote">showydima, 2026 © Права проданы Израилю. Сайт захвачен моссадом.</div>
+            <div class="footer-links">
+                <a href="/index.html">На главную</a> • 
+                <a href="https://github.com/Showydima1222" target="_blank">GitHub</a>
+            </div>
+            <div class="footer-meta">
+                HTML собран генератором: 12.06.2026 00:48<br>
+                Всего статей: 2
+            </div> 
+        </div>
+    </footer>
+    <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c8a278ddcaef4a33b493ba0b08ba9a63"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
+</html>
