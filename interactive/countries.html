@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -19,7 +20,59 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 72px 20px 60px;
+    }
+
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .select-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 280px;
+    }
+
+    #list-select {
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      background-color: #111111;
+      color: #e5e5e5;
+      border: 1px solid #333333;
+      border-radius: 10px;
+      padding: 10px 36px 10px 14px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    #list-select:hover,
+    #list-select:focus {
+      border-color: #666666;
+      color: #ffffff;
+    }
+
+    .select-wrapper::after {
+      content: "";
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid #888888;
+      border-bottom: 2px solid #888888;
+      transform: translateY(-65%) rotate(45deg);
+      pointer-events: none;
     }
 
     .container {
@@ -158,6 +211,12 @@
   </style>
 </head>
 <body>
+  <header class="top-bar">
+    <div class="select-wrapper">
+      <select id="list-select" aria-label="Выбор списка стран"></select>
+    </div>
+  </header>
+
   <main class="container">
     <div id="country-name" class="country-name"></div>
 
@@ -182,59 +241,99 @@
   <footer id="stats" class="stats">✅ 0 | ❌ 0</footer>
 
   <script>
-    const DATA = [
-      // Европа (44 страны)
-      { country: "Австрия", capital: "Вена" },
-      { country: "Албания", capital: "Тирана" },
-      { country: "Андорра", capital: "Андорра-ла-Велья" },
-      { country: "Беларусь", capital: "Минск" },
-      { country: "Бельгия", capital: "Брюссель" },
-      { country: "Болгария", capital: "София" },
-      { country: "Босния и Герцеговина", capital: "Сараево" },
-      { country: "Ватикан", capital: "Ватикан" },
-      { country: "Великобритания", capital: "Лондон" },
-      { country: "Венгрия", capital: "Будапешт" },
-      { country: "Германия", capital: "Берлин" },
-      { country: "Греция", capital: "Афины" },
-      { country: "Дания", capital: "Копенгаген" },
-      { country: "Ирландия", capital: "Дублин" },
-      { country: "Исландия", capital: "Рейкьявик" },
-      { country: "Испания", capital: "Мадрид" },
-      { country: "Италия", capital: "Рим" },
-      { country: "Латвия", capital: "Рига" },
-      { country: "Литва", capital: "Вильнюс" },
-      { country: "Лихтенштейн", capital: "Вадуц" },
-      { country: "Люксембург", capital: "Люксембург" },
-      { country: "Мальта", capital: "Валлетта" },
-      { country: "Молдова", capital: "Кишинёв" },
-      { country: "Монако", capital: "Монако" },
-      { country: "Нидерланды", capital: "Амстердам" },
-      { country: "Норвегия", capital: "Осло" },
-      { country: "Польша", capital: "Варшава" },
-      { country: "Португалия", capital: "Лиссабон" },
-      { country: "Россия", capital: "Москва" },
-      { country: "Румыния", capital: "Бухарест" },
-      { country: "Сан-Марино", capital: "Сан-Марино" },
-      { country: "Северная Македония", capital: "Скопье" },
-      { country: "Сербия", capital: "Белград" },
-      { country: "Словакия", capital: "Братислава" },
-      { country: "Словения", capital: "Любляна" },
-      { country: "Украина", capital: "Киев" },
-      { country: "Финляндия", capital: "Хельсинки" },
-      { country: "Франция", capital: "Париж" },
-      { country: "Хорватия", capital: "Загреб" },
-      { country: "Черногория", capital: "Подгорица" },
-      { country: "Чехия", capital: "Прага" },
-      { country: "Швейцария", capital: "Берн" },
-      { country: "Швеция", capital: "Стокгольм" },
-      { country: "Эстония", capital: "Таллин" },
+    const COUNTRY_LISTS = {
+      reasonable: {
+        label: "Адекватные страны",
+        items: [
+          // Заполни свой список ниже по формату { country: "Страна", capital: "Столица" }
+          { country: "Франция", capital: "Париж" },
+          { country: "Германия", capital: "Берлин" },
+          { country: "Италия", capital: "Рим" },
+          { country: "Испания", capital: "Мадрид" },
+          { country: "Великобритания", capital: "Лондон" },
+          { country: "Австрия", capital: "Вена" },
+          { country: "Беларусь", capital: "Минск" },
+          { country: "Ватикан", capital: "Ватикан" },
+          { country: "Греция", capital: "Афины" },
+          { country: "Дания", capital: "Копенгаген" },
+          { country: "Ирландия", capital: "Дублин" },
+          { country: "Исландия", capital: "Рейкьявик" },
+          { country: "Испания", capital: "Мадрид" },
+          { country: "Италия", capital: "Рим" },
+          { country: "Латвия", capital: "Рига" },
+          { country: "Литва", capital: "Вильнюс" },
+          { country: "Люксембург", capital: "Люксембург" },
+          { country: "Нидерланды", capital: "Амстердам" },
+          { country: "Норвегия", capital: "Осло" },
+          { country: "Польша", capital: "Варшава" },
+          { country: "Сербия", capital: "Белград" },
+          { country: "Финляндия", capital: "Хельсинки" },
+          { country: "Франция", capital: "Париж" },
+          { country: "Швейцария", capital: "Берн" },
+          { country: "Швеция", capital: "Стокгольм" },
+          { country: "Эстония", capital: "Таллин" },
+            { country: "США", capital: "Вашингтон" },
+          { country: "Канада", capital: "Оттава" },
+          { country: "Бразилия", capital: "Бразилиа" },
+          { country: "Мексика", capital: "Мехико" }
+        ]
+      },
+      all: {
+        label: "Все страны (48)",
+        items: [
+          // Европа (44 страны)
+          { country: "Австрия", capital: "Вена" },
+          { country: "Албания", capital: "Тирана" },
+          { country: "Андорра", capital: "Андорра-ла-Велья" },
+          { country: "Беларусь", capital: "Минск" },
+          { country: "Бельгия", capital: "Брюссель" },
+          { country: "Болгария", capital: "София" },
+          { country: "Босния и Герцеговина", capital: "Сараево" },
+          { country: "Ватикан", capital: "Ватикан" },
+          { country: "Великобритания", capital: "Лондон" },
+          { country: "Венгрия", capital: "Будапешт" },
+          { country: "Германия", capital: "Берлин" },
+          { country: "Греция", capital: "Афины" },
+          { country: "Дания", capital: "Копенгаген" },
+          { country: "Ирландия", capital: "Дублин" },
+          { country: "Исландия", capital: "Рейкьявик" },
+          { country: "Испания", capital: "Мадрид" },
+          { country: "Италия", capital: "Рим" },
+          { country: "Латвия", capital: "Рига" },
+          { country: "Литва", capital: "Вильнюс" },
+          { country: "Лихтенштейн", capital: "Вадуц" },
+          { country: "Люксембург", capital: "Люксембург" },
+          { country: "Мальта", capital: "Валлетта" },
+          { country: "Молдова", capital: "Кишинёв" },
+          { country: "Монако", capital: "Монако" },
+          { country: "Нидерланды", capital: "Амстердам" },
+          { country: "Норвегия", capital: "Осло" },
+          { country: "Польша", capital: "Варшава" },
+          { country: "Россия", capital: "Москва" },
+          { country: "Румыния", capital: "Бухарест" },
+          { country: "Сан-Марино", capital: "Сан-Марино" },
+          { country: "Северная Македония", capital: "Скопье" },
+          { country: "Сербия", capital: "Белград" },
+          { country: "Словакия", capital: "Братислава" },
+          { country: "Словения", capital: "Любляна" },
+          { country: "Украина", capital: "Киев" },
+          { country: "Финляндия", capital: "Хельсинки" },
+          { country: "Франция", capital: "Париж" },
+          { country: "Хорватия", capital: "Загреб" },
+          { country: "Черногория", capital: "Подгорица" },
+          { country: "Чехия", capital: "Прага" },
+          { country: "Швейцария", capital: "Берн" },
+          { country: "Швеция", capital: "Стокгольм" },
+          { country: "Эстония", capital: "Таллин" },
 
-      // Америка (4 страны)
-      { country: "США", capital: "Вашингтон" },
-      { country: "Канада", capital: "Оттава" },
-      { country: "Бразилия", capital: "Бразилиа" },
-      { country: "Мексика", capital: "Мехико" }
-    ];
+          // Америка (4 страны)
+          { country: "США", capital: "Вашингтон" },
+          { country: "Канада", capital: "Оттава" },
+          { country: "Бразилия", capital: "Бразилиа" },
+          { country: "Мексика", capital: "Мехико" }
+        ]
+      }
+    };
 
     const PRAISES = [
       "Молодец, умница!",
@@ -244,10 +343,7 @@
       "Безупречно!"
     ];
 
-    const ALL_CAPITALS = [...new Set(DATA.map((item) => item.capital))].sort((a, b) =>
-      a.localeCompare(b, "ru")
-    );
-
+    const listSelectEl = document.getElementById("list-select");
     const countryEl = document.getElementById("country-name");
     const inputEl = document.getElementById("capital-input");
     const dropdownEl = document.getElementById("dropdown");
@@ -255,6 +351,8 @@
     const nextBtn = document.getElementById("next-btn");
     const statsEl = document.getElementById("stats");
 
+    let activeData = [];
+    let activeCapitals = [];
     let queue = [];
     let currentItem = null;
     let lastCountry = null;
@@ -268,8 +366,34 @@
       return str.trim().toLowerCase().replace(/ё/g, "е");
     }
 
+    function initSelectMenu() {
+      Object.entries(COUNTRY_LISTS).forEach(([key, listObj]) => {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = listObj.label;
+        listSelectEl.appendChild(option);
+      });
+    }
+
+    function setCountryList(listKey) {
+      const selected = COUNTRY_LISTS[listKey];
+      if (!selected || selected.items.length === 0) return;
+
+      activeData = selected.items;
+      activeCapitals = [...new Set(activeData.map((item) => item.capital))].sort((a, b) =>
+        a.localeCompare(b, "ru")
+      );
+
+      queue = [];
+      lastCountry = null;
+      correctCount = 0;
+      wrongCount = 0;
+      updateStats();
+      nextQuestion();
+    }
+
     function refillQueue() {
-      const copy = [...DATA];
+      const copy = [...activeData];
       for (let i = copy.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [copy[i], copy[j]] = [copy[j], copy[i]];
@@ -298,10 +422,10 @@
         return;
       }
 
-      const startsWith = ALL_CAPITALS.filter((cap) =>
+      const startsWith = activeCapitals.filter((cap) =>
         normalize(cap).startsWith(normQuery)
       );
-      const includes = ALL_CAPITALS.filter(
+      const includes = activeCapitals.filter(
         (cap) => !normalize(cap).startsWith(normQuery) && normalize(cap).includes(normQuery)
       );
 
@@ -388,6 +512,10 @@
       inputEl.focus();
     }
 
+    listSelectEl.addEventListener("change", (e) => {
+      setCountryList(e.target.value);
+    });
+
     inputEl.addEventListener("input", () => {
       renderDropdown(inputEl.value);
     });
@@ -438,7 +566,8 @@
 
     nextBtn.addEventListener("click", nextQuestion);
 
-    nextQuestion();
+    initSelectMenu();
+    setCountryList("reasonable");
   </script>
 </body>
 </html>
