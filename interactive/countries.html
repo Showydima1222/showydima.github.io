@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Столицы стран</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #000000;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    .country-name {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    .input-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    #capital-input {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 1.1rem;
+      background-color: #111111;
+      color: #ffffff;
+      border: 2px solid #333333;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+    }
+
+    #capital-input:focus {
+      border-color: #666666;
+    }
+
+    #capital-input.correct {
+      border-color: #22c55e;
+      background-color: rgba(34, 197, 94, 0.16);
+      color: #86efac;
+    }
+
+    #capital-input.wrong {
+      border-color: #ef4444;
+      background-color: rgba(239, 68, 68, 0.16);
+      color: #fca5a5;
+    }
+
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background-color: #161616;
+      border: 1px solid #333333;
+      border-radius: 10px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 100;
+      text-align: left;
+      display: none;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.85);
+    }
+
+    .dropdown.open {
+      display: block;
+    }
+
+    .dropdown-item {
+      padding: 11px 16px;
+      font-size: 1rem;
+      cursor: pointer;
+      border-bottom: 1px solid #222222;
+      color: #e5e5e5;
+    }
+
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-item:hover,
+    .dropdown-item.active {
+      background-color: #2a2a2a;
+      color: #ffffff;
+    }
+
+    .feedback {
+      min-height: 26px;
+      margin-top: 14px;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .feedback.correct {
+      color: #4ade80;
+    }
+
+    .feedback.wrong {
+      color: #f87171;
+    }
+
+    #next-btn {
+      margin-top: 14px;
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      background-color: #ffffff;
+      color: #000000;
+      cursor: pointer;
+      transition: opacity 0.15s ease, background-color 0.15s ease;
+    }
+
+    #next-btn:hover:not(:disabled) {
+      background-color: #e5e5e5;
+    }
+
+    #next-btn:disabled {
+      background-color: #1f1f1f;
+      color: #555555;
+      cursor: not-allowed;
+    }
+
+    .stats {
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 1rem;
+      color: #999999;
+      font-variant-numeric: tabular-nums;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <div id="country-name" class="country-name"></div>
+
+    <div class="input-wrapper">
+      <input
+        id="capital-input"
+        type="text"
+        placeholder="Введите столицу..."
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+      />
+      <div id="dropdown" class="dropdown"></div>
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+
+    <button id="next-btn" type="button" disabled>Следующий</button>
+  </main>
+
+  <footer id="stats" class="stats">✅ 0 | ❌ 0</footer>
+
+  <script>
+    const DATA = [
+      // Европа (44 страны)
+      { country: "Австрия", capital: "Вена" },
+      { country: "Албания", capital: "Тирана" },
+      { country: "Андорра", capital: "Андорра-ла-Велья" },
+      { country: "Беларусь", capital: "Минск" },
+      { country: "Бельгия", capital: "Брюссель" },
+      { country: "Болгария", capital: "София" },
+      { country: "Босния и Герцеговина", capital: "Сараево" },
+      { country: "Ватикан", capital: "Ватикан" },
+      { country: "Великобритания", capital: "Лондон" },
+      { country: "Венгрия", capital: "Будапешт" },
+      { country: "Германия", capital: "Берлин" },
+      { country: "Греция", capital: "Афины" },
+      { country: "Дания", capital: "Копенгаген" },
+      { country: "Ирландия", capital: "Дублин" },
+      { country: "Исландия", capital: "Рейкьявик" },
+      { country: "Испания", capital: "Мадрид" },
+      { country: "Италия", capital: "Рим" },
+      { country: "Латвия", capital: "Рига" },
+      { country: "Литва", capital: "Вильнюс" },
+      { country: "Лихтенштейн", capital: "Вадуц" },
+      { country: "Люксембург", capital: "Люксембург" },
+      { country: "Мальта", capital: "Валлетта" },
+      { country: "Молдова", capital: "Кишинёв" },
+      { country: "Монако", capital: "Монако" },
+      { country: "Нидерланды", capital: "Амстердам" },
+      { country: "Норвегия", capital: "Осло" },
+      { country: "Польша", capital: "Варшава" },
+      { country: "Португалия", capital: "Лиссабон" },
+      { country: "Россия", capital: "Москва" },
+      { country: "Румыния", capital: "Бухарест" },
+      { country: "Сан-Марино", capital: "Сан-Марино" },
+      { country: "Северная Македония", capital: "Скопье" },
+      { country: "Сербия", capital: "Белград" },
+      { country: "Словакия", capital: "Братислава" },
+      { country: "Словения", capital: "Любляна" },
+      { country: "Украина", capital: "Киев" },
+      { country: "Финляндия", capital: "Хельсинки" },
+      { country: "Франция", capital: "Париж" },
+      { country: "Хорватия", capital: "Загреб" },
+      { country: "Черногория", capital: "Подгорица" },
+      { country: "Чехия", capital: "Прага" },
+      { country: "Швейцария", capital: "Берн" },
+      { country: "Швеция", capital: "Стокгольм" },
+      { country: "Эстония", capital: "Таллин" },
+
+      // Америка (4 страны)
+      { country: "США", capital: "Вашингтон" },
+      { country: "Канада", capital: "Оттава" },
+      { country: "Бразилия", capital: "Бразилиа" },
+      { country: "Мексика", capital: "Мехико" }
+    ];
+
+    const PRAISES = [
+      "Молодец, умница!",
+      "Верно, так держать!",
+      "Отлично, в точку!",
+      "Правильно, умница!",
+      "Безупречно!"
+    ];
+
+    const ALL_CAPITALS = [...new Set(DATA.map((item) => item.capital))].sort((a, b) =>
+      a.localeCompare(b, "ru")
+    );
+
+    const countryEl = document.getElementById("country-name");
+    const inputEl = document.getElementById("capital-input");
+    const dropdownEl = document.getElementById("dropdown");
+    const feedbackEl = document.getElementById("feedback");
+    const nextBtn = document.getElementById("next-btn");
+    const statsEl = document.getElementById("stats");
+
+    let queue = [];
+    let currentItem = null;
+    let lastCountry = null;
+    let isAnswered = false;
+    let filteredMatches = [];
+    let activeIndex = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+
+    function normalize(str) {
+      return str.trim().toLowerCase().replace(/ё/g, "е");
+    }
+
+    function refillQueue() {
+      const copy = [...DATA];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      if (copy.length > 1 && copy[0].country === lastCountry) {
+        [copy[0], copy[1]] = [copy[1], copy[0]];
+      }
+      queue = copy;
+    }
+
+    function updateStats() {
+      statsEl.textContent = `✅ ${correctCount} | ❌ ${wrongCount}`;
+    }
+
+    function closeDropdown() {
+      dropdownEl.classList.remove("open");
+      dropdownEl.innerHTML = "";
+      filteredMatches = [];
+      activeIndex = 0;
+    }
+
+    function renderDropdown(query) {
+      const normQuery = normalize(query);
+      if (!normQuery || isAnswered) {
+        closeDropdown();
+        return;
+      }
+
+      const startsWith = ALL_CAPITALS.filter((cap) =>
+        normalize(cap).startsWith(normQuery)
+      );
+      const includes = ALL_CAPITALS.filter(
+        (cap) => !normalize(cap).startsWith(normQuery) && normalize(cap).includes(normQuery)
+      );
+
+      filteredMatches = [...startsWith, ...includes].slice(0, 8);
+      activeIndex = 0;
+
+      if (filteredMatches.length === 0) {
+        closeDropdown();
+        return;
+      }
+
+      dropdownEl.innerHTML = "";
+      filteredMatches.forEach((capital, idx) => {
+        const div = document.createElement("div");
+        div.className = "dropdown-item" + (idx === activeIndex ? " active" : "");
+        div.textContent = capital;
+        div.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          selectCapital(capital);
+        });
+        dropdownEl.appendChild(div);
+      });
+
+      dropdownEl.classList.add("open");
+    }
+
+    function updateActiveDropdownItem() {
+      const items = dropdownEl.querySelectorAll(".dropdown-item");
+      items.forEach((item, idx) => {
+        item.classList.toggle("active", idx === activeIndex);
+      });
+    }
+
+    function selectCapital(capital) {
+      inputEl.value = capital;
+      closeDropdown();
+      checkAnswer(capital);
+    }
+
+    function checkAnswer(rawValue) {
+      if (isAnswered) return;
+      const userAnswer = normalize(rawValue);
+      if (!userAnswer) return;
+
+      isAnswered = true;
+      inputEl.readOnly = true;
+      closeDropdown();
+
+      const rightAnswer = normalize(currentItem.capital);
+
+      if (userAnswer === rightAnswer) {
+        correctCount++;
+        inputEl.classList.add("correct");
+        const praise = PRAISES[Math.floor(Math.random() * PRAISES.length)];
+        feedbackEl.textContent = praise;
+        feedbackEl.className = "feedback correct";
+      } else {
+        wrongCount++;
+        inputEl.classList.add("wrong");
+        feedbackEl.textContent = `Неверно. Правильный ответ: ${currentItem.capital}`;
+        feedbackEl.className = "feedback wrong";
+      }
+
+      updateStats();
+      nextBtn.disabled = false;
+    }
+
+    function nextQuestion() {
+      if (queue.length === 0) {
+        refillQueue();
+      }
+      currentItem = queue.shift();
+      lastCountry = currentItem.country;
+
+      isAnswered = false;
+      countryEl.textContent = currentItem.country;
+      inputEl.value = "";
+      inputEl.readOnly = false;
+      inputEl.className = "";
+      feedbackEl.textContent = "";
+      feedbackEl.className = "feedback";
+      nextBtn.disabled = true;
+      closeDropdown();
+      inputEl.focus();
+    }
+
+    inputEl.addEventListener("input", () => {
+      renderDropdown(inputEl.value);
+    });
+
+    inputEl.addEventListener("keydown", (e) => {
+      if (isAnswered) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          nextQuestion();
+        }
+        return;
+      }
+
+      if (dropdownEl.classList.contains("open") && filteredMatches.length > 0) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          activeIndex = (activeIndex + 1) % filteredMatches.length;
+          updateActiveDropdownItem();
+          return;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          activeIndex = (activeIndex - 1 + filteredMatches.length) % filteredMatches.length;
+          updateActiveDropdownItem();
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          closeDropdown();
+          return;
+        }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          selectCapital(filteredMatches[activeIndex]);
+          return;
+        }
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        checkAnswer(inputEl.value);
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".input-wrapper")) {
+        closeDropdown();
+      }
+    });
+
+    nextBtn.addEventListener("click", nextQuestion);
+
+    nextQuestion();
+  </script>
+</body>
+</html>
