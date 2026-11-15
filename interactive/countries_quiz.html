@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Тест: Столицы стран</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #000000;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+    }
+
+    .quiz-container {
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    .progress {
+      font-size: 0.9rem;
+      color: #777777;
+      margin-bottom: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .country-name {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    .input-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    #capital-input {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 1.1rem;
+      background-color: #111111;
+      color: #ffffff;
+      border: 2px solid #333333;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    #capital-input:focus {
+      border-color: #666666;
+    }
+
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background-color: #161616;
+      border: 1px solid #333333;
+      border-radius: 10px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 100;
+      text-align: left;
+      display: none;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.85);
+    }
+
+    .dropdown.open {
+      display: block;
+    }
+
+    .dropdown-item {
+      padding: 11px 16px;
+      font-size: 1rem;
+      cursor: pointer;
+      border-bottom: 1px solid #222222;
+      color: #e5e5e5;
+    }
+
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-item:hover,
+    .dropdown-item.active {
+      background-color: #2a2a2a;
+      color: #ffffff;
+    }
+
+    #next-btn,
+    #restart-btn {
+      margin-top: 20px;
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      background-color: #ffffff;
+      color: #000000;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    #next-btn:hover:not(:disabled),
+    #restart-btn:hover {
+      background-color: #e5e5e5;
+    }
+
+    #next-btn:disabled {
+      background-color: #1f1f1f;
+      color: #555555;
+      cursor: not-allowed;
+    }
+
+    .results-container {
+      width: 100%;
+      max-width: 740px;
+      display: none;
+      text-align: center;
+    }
+
+    .results-summary {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid #262626;
+      border-radius: 12px;
+      background-color: #0a0a0a;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    th {
+      padding: 14px 16px;
+      background-color: #141414;
+      color: #999999;
+      font-weight: 600;
+      border-bottom: 1px solid #262626;
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #1c1c1c;
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr.row-correct {
+      background-color: rgba(34, 197, 94, 0.08);
+    }
+
+    tr.row-correct .cell-country,
+    tr.row-correct .cell-capital {
+      color: #4ade80;
+      font-weight: 600;
+    }
+
+    tr.row-wrong {
+      background-color: rgba(239, 68, 68, 0.1);
+    }
+
+    tr.row-wrong .cell-country,
+    tr.row-wrong .cell-user {
+      color: #f87171;
+      font-weight: 600;
+    }
+
+    .right-answer-label {
+      color: #e5e5e5;
+      font-weight: 600;
+    }
+
+    .mnemonic-box {
+      margin-top: 6px;
+      font-size: 0.86rem;
+      line-height: 1.4;
+      color: #fca5a5;
+      background-color: rgba(239, 68, 68, 0.12);
+      border-left: 2px solid #ef4444;
+      padding: 6px 10px;
+      border-radius: 4px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <main id="quiz-screen" class="quiz-container">
+    <div id="progress" class="progress">Вопрос 1 из 27</div>
+    <div id="country-name" class="country-name"></div>
+
+    <div class="input-wrapper">
+      <input
+        id="capital-input"
+        type="text"
+        placeholder="Введите столицу..."
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+      />
+      <div id="dropdown" class="dropdown"></div>
+    </div>
+
+    <button id="next-btn" type="button" disabled>Далее</button>
+  </main>
+
+  <section id="results-screen" class="results-container">
+    <div id="results-summary" class="results-summary">✅ 0 | ❌ 0</div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Страна</th>
+            <th>Ваш ответ</th>
+            <th>Правильная столица</th>
+          </tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+      </table>
+    </div>
+
+    <button id="restart-btn" type="button">Перепройти тест</button>
+  </section>
+
+  <script>
+    const TEST_DATA = [
+      {
+        country: "Франция",
+        capital: "Париж",
+        mnemonic: "Франция → Эйфелева башня, Лувр и круассаны в Париже."
+      },
+      {
+        country: "Германия",
+        capital: "Берлин",
+        mnemonic: "Германия → Берлинская стена и символ города — медведь (нем. Bär)."
+      },
+      {
+        country: "Италия",
+        capital: "Рим",
+        mnemonic: "Италия — наследница Римской империи, «все дороги ведут в Рим»."
+      },
+      {
+        country: "Испания",
+        capital: "Мадрид",
+        mnemonic: "Испанский футбольный клуб «Реал Мадрид» — прямая привязка к столице."
+      },
+      {
+        country: "Великобритания",
+        capital: "Лондон",
+        mnemonic: "Базовая пара из школьного английского: «London is the capital of Great Britain»."
+      },
+      {
+        country: "Австрия",
+        capital: "Вена",
+        mnemonic: "Австрия → Венский вальс, венский штрудель и венская опера."
+      },
+      {
+        country: "Беларусь",
+        capital: "Минск",
+        mnemonic: "Минск — единственный город-миллионник Беларуси; начинается на «М», как и соседняя Москва."
+      },
+      {
+        country: "Ватикан",
+        capital: "Ватикан",
+        mnemonic: "Государство-анклав внутри Рима: название страны и столицы совпадают."
+      },
+      {
+        country: "Греция",
+        capital: "Афины",
+        mnemonic: "Греция — родина античных мифов, столица названа в честь Афины — богини мудрости."
+      },
+      {
+        country: "Дания",
+        capital: "Копенгаген",
+        mnemonic: "Датский сказочник Андерсен жил в Копенгагене, там же стоит памятник его Русалочке."
+      },
+      {
+        country: "Ирландия",
+        capital: "Дублин",
+        mnemonic: "В Ирландии много «дубов» (Дублин) и знаменитая пивоварня Guinness."
+      },
+      {
+        country: "Исландия",
+        capital: "Рейкьявик",
+        mnemonic: "Исландия — «страна льдов», а Рейкьявик переводится как «дымящаяся бухта» из-за гейзеров."
+      },
+      {
+        country: "Латвия",
+        capital: "Рига",
+        mnemonic: "Латвия → Рижский бальзам и Рижский залив Балтийского моря."
+      },
+      {
+        country: "Литва",
+        capital: "Вильнюс",
+        mnemonic: "В названии страны одна буква «и» (Литва → Вильнюс), в отличие от Латвии (Рига)."
+      },
+      {
+        country: "Люксембург",
+        capital: "Люксембург",
+        mnemonic: "Карликовое государство, где название столицы полностью совпадает со страной."
+      },
+      {
+        country: "Нидерланды",
+        capital: "Амстердам",
+        mnemonic: "Нидерланды («низкие земли») лежат ниже уровня моря, от воды город защищают дамбы — Амстер-дам."
+      },
+      {
+        country: "Норвегия",
+        capital: "Осло",
+        mnemonic: "Короткие названия: в Норвегии холодно, а в Осло «осы» не летают."
+      },
+      {
+        country: "Польша",
+        capital: "Варшава",
+        mnemonic: "Польша → Варшавское шоссе и исторический Варшавский договор."
+      },
+      {
+        country: "Сербия",
+        capital: "Белград",
+        mnemonic: "Белград переводится как «Белый город» — главная крепость на слиянии Савы и Дуная."
+      },
+      {
+        country: "Финляндия",
+        capital: "Хельсинки",
+        mnemonic: "Финляндия — страна холода, а Хельсинки созвучно со скандинавской богиней холода Хель."
+      },
+      {
+        country: "Швейцария",
+        capital: "Берн",
+        mnemonic: "Швейцария — не Женева и не Цюрих, а Берн (от нем. Bär — «медведь», изображён на гербе города)."
+      },
+      {
+        country: "Швеция",
+        capital: "Стокгольм",
+        mnemonic: "Шведская писательница Астрид Линдгрен поселила Карлсона на крыше в Стокгольме."
+      },
+      {
+        country: "Эстония",
+        capital: "Таллин",
+        mnemonic: "Самая северная из стран Балтии, созвучно со словом «талый» снег."
+      },
+      {
+        country: "США",
+        capital: "Вашингтон",
+        mnemonic: "США — не Нью-Йорк; столица названа в честь первого президента Джорджа Вашингтона."
+      },
+      {
+        country: "Канада",
+        capital: "Оттава",
+        mnemonic: "Канада — не Торонто; запоминаем по слову «отава» (молодая трава, отрастающая после покоса)."
+      },
+      {
+        country: "Бразилия",
+        capital: "Бразилиа",
+        mnemonic: "Отличается только последней буквой: страНА БразилиЯ, столицА БразилиА."
+      },
+      {
+        country: "Мексика",
+        capital: "Мехико",
+        mnemonic: "Почти одинаковое звучание: Мексика → Мехико (по-испански обе пишутся как México)."
+      }
+    ];
+
+    const ALL_CAPITALS = [...new Set(TEST_DATA.map((item) => item.capital))].sort((a, b) =>
+      a.localeCompare(b, "ru")
+    );
+
+    const quizScreen = document.getElementById("quiz-screen");
+    const resultsScreen = document.getElementById("results-screen");
+    const progressEl = document.getElementById("progress");
+    const countryEl = document.getElementById("country-name");
+    const inputEl = document.getElementById("capital-input");
+    const dropdownEl = document.getElementById("dropdown");
+    const nextBtn = document.getElementById("next-btn");
+    const resultsSummaryEl = document.getElementById("results-summary");
+    const resultsBodyEl = document.getElementById("results-body");
+    const restartBtn = document.getElementById("restart-btn");
+
+    let shuffledQuestions = [];
+    let currentIndex = 0;
+    let userAnswers = [];
+    let filteredMatches = [];
+    let activeDropdownIndex = 0;
+
+    function normalize(str) {
+      return str.trim().toLowerCase().replace(/ё/g, "е");
+    }
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function closeDropdown() {
+      dropdownEl.classList.remove("open");
+      dropdownEl.innerHTML = "";
+      filteredMatches = [];
+      activeDropdownIndex = 0;
+    }
+
+    function renderDropdown(query) {
+      const normQuery = normalize(query);
+      if (!normQuery) {
+        closeDropdown();
+        return;
+      }
+
+      const startsWith = ALL_CAPITALS.filter((cap) =>
+        normalize(cap).startsWith(normQuery)
+      );
+      const includes = ALL_CAPITALS.filter(
+        (cap) => !normalize(cap).startsWith(normQuery) && normalize(cap).includes(normQuery)
+      );
+
+      filteredMatches = [...startsWith, ...includes].slice(0, 8);
+      activeDropdownIndex = 0;
+
+      if (filteredMatches.length === 0) {
+        closeDropdown();
+        return;
+      }
+
+      dropdownEl.innerHTML = "";
+      filteredMatches.forEach((capital, idx) => {
+        const div = document.createElement("div");
+        div.className = "dropdown-item" + (idx === activeDropdownIndex ? " active" : "");
+        div.textContent = capital;
+        div.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          pickDropdownItem(capital);
+        });
+        dropdownEl.appendChild(div);
+      });
+
+      dropdownEl.classList.add("open");
+    }
+
+    function updateActiveDropdownItem() {
+      const items = dropdownEl.querySelectorAll(".dropdown-item");
+      items.forEach((item, idx) => {
+        item.classList.toggle("active", idx === activeDropdownIndex);
+      });
+    }
+
+    function pickDropdownItem(capital) {
+      inputEl.value = capital;
+      nextBtn.disabled = false;
+      closeDropdown();
+      inputEl.focus();
+    }
+
+    function startTest() {
+      shuffledQuestions = shuffleArray(TEST_DATA);
+      currentIndex = 0;
+      userAnswers = [];
+
+      resultsScreen.style.display = "none";
+      quizScreen.classList.remove("hidden");
+
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const item = shuffledQuestions[currentIndex];
+      progressEl.textContent = `Вопрос ${currentIndex + 1} из ${shuffledQuestions.length}`;
+      countryEl.textContent = item.country;
+      inputEl.value = "";
+      nextBtn.disabled = true;
+      nextBtn.textContent =
+        currentIndex === shuffledQuestions.length - 1 ? "Завершить тест" : "Далее";
+      closeDropdown();
+      inputEl.focus();
+    }
+
+    function submitCurrentAnswer() {
+      const rawValue = inputEl.value.trim();
+      if (!rawValue) return;
+
+      const item = shuffledQuestions[currentIndex];
+      const isCorrect = normalize(rawValue) === normalize(item.capital);
+
+      userAnswers.push({
+        country: item.country,
+        correctCapital: item.capital,
+        mnemonic: item.mnemonic,
+        userAnswer: rawValue,
+        isCorrect
+      });
+
+      currentIndex++;
+
+      if (currentIndex < shuffledQuestions.length) {
+        renderQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      closeDropdown();
+      quizScreen.classList.add("hidden");
+      resultsScreen.style.display = "block";
+
+      const correctCount = userAnswers.filter((a) => a.isCorrect).length;
+      const wrongCount = userAnswers.length - correctCount;
+
+      resultsSummaryEl.textContent = `✅ ${correctCount} | ❌ ${wrongCount}`;
+      resultsBodyEl.innerHTML = "";
+
+      userAnswers.forEach((entry) => {
+        const tr = document.createElement("tr");
+        tr.className = entry.isCorrect ? "row-correct" : "row-wrong";
+
+        const tdCountry = document.createElement("td");
+        tdCountry.className = "cell-country";
+        tdCountry.textContent = entry.country;
+
+        const tdUser = document.createElement("td");
+        tdUser.className = "cell-user";
+        tdUser.textContent = entry.userAnswer;
+
+        const tdCapital = document.createElement("td");
+        tdCapital.className = "cell-capital";
+
+        if (entry.isCorrect) {
+          tdCapital.textContent = entry.correctCapital;
+        } else {
+          const rightSpan = document.createElement("div");
+          rightSpan.className = "right-answer-label";
+          rightSpan.textContent = entry.correctCapital;
+          tdCapital.appendChild(rightSpan);
+
+          if (entry.mnemonic) {
+            const mnemonicDiv = document.createElement("div");
+            mnemonicDiv.className = "mnemonic-box";
+            mnemonicDiv.textContent = `Мнемоника: ${entry.mnemonic}`;
+            tdCapital.appendChild(mnemonicDiv);
+          }
+        }
+
+        tr.appendChild(tdCountry);
+        tr.appendChild(tdUser);
+        tr.appendChild(tdCapital);
+        resultsBodyEl.appendChild(tr);
+      });
+    }
+
+    inputEl.addEventListener("input", () => {
+      nextBtn.disabled = inputEl.value.trim().length === 0;
+      renderDropdown(inputEl.value);
+    });
+
+    inputEl.addEventListener("keydown", (e) => {
+      if (dropdownEl.classList.contains("open") && filteredMatches.length > 0) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          activeDropdownIndex = (activeDropdownIndex + 1) % filteredMatches.length;
+          updateActiveDropdownItem();
+          return;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          activeDropdownIndex =
+            (activeDropdownIndex - 1 + filteredMatches.length) % filteredMatches.length;
+          updateActiveDropdownItem();
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          closeDropdown();
+          return;
+        }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          pickDropdownItem(filteredMatches[activeDropdownIndex]);
+          return;
+        }
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        submitCurrentAnswer();
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".input-wrapper")) {
+        closeDropdown();
+      }
+    });
+
+    nextBtn.addEventListener("click", submitCurrentAnswer);
+    restartBtn.addEventListener("click", startTest);
+
+    startTest();
+  </script>
+</body>
+</html>
