@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Карта Европы: Тест</title>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #000000;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Стартовый экран настроек */
+    .start-container {
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      background-color: #0d0d0d;
+      border: 1px solid #262626;
+      border-radius: 16px;
+      padding: 32px 24px;
+    }
+
+    .start-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .start-subtitle {
+      font-size: 0.95rem;
+      color: #888888;
+      margin-bottom: 28px;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #141414;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 24px;
+      cursor: pointer;
+      user-select: none;
+      text-align: left;
+    }
+
+    .setting-label {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #f0f0f0;
+    }
+
+    .setting-hint {
+      font-size: 0.82rem;
+      color: #777777;
+      margin-top: 2px;
+    }
+
+    .switch {
+      position: relative;
+      width: 46px;
+      height: 26px;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      background-color: #2e2e2e;
+      border-radius: 999px;
+      transition: background-color 0.2s ease;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #ffffff;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+    }
+
+    .switch input:checked + .slider {
+      background-color: #22c55e;
+    }
+
+    .switch input:checked + .slider::before {
+      transform: translateX(20px);
+    }
+
+    .primary-btn {
+      width: 100%;
+      padding: 13px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      background-color: #ffffff;
+      color: #000000;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .primary-btn:hover:not(:disabled) {
+      background-color: #e5e5e5;
+    }
+
+    .primary-btn:disabled {
+      background-color: #1f1f1f;
+      color: #555555;
+      cursor: not-allowed;
+    }
+
+    /* Экран теста с картой */
+    .quiz-container {
+      width: 100%;
+      max-width: 880px;
+      text-align: center;
+    }
+
+    .quiz-header {
+      margin-bottom: 14px;
+    }
+
+    .progress {
+      font-size: 0.88rem;
+      color: #777777;
+      margin-bottom: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .target-country {
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .map-box {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10.5;
+      max-height: 540px;
+      background-color: #080808; /* Оттенок серого 1: фон карты */
+      border: 1px solid #262626;
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      touch-action: none;
+    }
+
+    #europe-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+
+    #europe-svg:active {
+      cursor: grabbing;
+    }
+
+    .land-other {
+      fill: #141414; /* Оттенок серого 2: суша вне Европы */
+      stroke: #484848; /* Оттенок серого 5: границы */
+      stroke-width: 0.5px;
+      pointer-events: none;
+    }
+
+    .country-shape {
+      fill: #222222; /* Оттенок серого 3: страны Европы */
+      stroke: #484848; /* Оттенок серого 5: границы */
+      stroke-width: 0.7px;
+      cursor: pointer;
+      transition: fill 0.12s ease;
+    }
+
+    .map-interactive .country-shape:hover {
+      fill: #333333; /* Оттенок серого 4: наведение */
+    }
+
+    .country-shape.correct {
+      fill: #22c55e !important;
+      stroke: #86efac !important;
+    }
+
+    .country-shape.wrong {
+      fill: #ef4444 !important;
+      stroke: #fca5a5 !important;
+    }
+
+    .microstate-pin {
+      fill: #333333; /* Оттенок серого 4 */
+      stroke: #484848; /* Оттенок серого 5 */
+      stroke-width: 1.2px;
+      cursor: pointer;
+      transition: fill 0.12s ease;
+    }
+
+    .map-interactive .microstate-pin:hover {
+      fill: #484848;
+    }
+
+    .microstate-pin.correct {
+      fill: #22c55e !important;
+      stroke: #86efac !important;
+    }
+
+    .microstate-pin.wrong {
+      fill: #ef4444 !important;
+      stroke: #fca5a5 !important;
+    }
+
+    .zoom-controls {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 20;
+    }
+
+    .zoom-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid #333333;
+      background-color: #141414;
+      color: #e5e5e5;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .zoom-btn:hover {
+      background-color: #222222;
+      color: #ffffff;
+    }
+
+    .map-status {
+      min-height: 24px;
+      font-size: 0.98rem;
+      font-weight: 500;
+      margin-bottom: 12px;
+      color: #a3a3a3;
+    }
+
+    .map-status.correct {
+      color: #4ade80;
+    }
+
+    .map-status.wrong {
+      color: #f87171;
+    }
+
+    /* Блок ввода столицы */
+    .capital-section {
+      max-width: 420px;
+      margin: 0 auto 12px;
+    }
+
+    .capital-prompt {
+      font-size: 0.92rem;
+      color: #999999;
+      margin-bottom: 8px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    #capital-input {
+      width: 100%;
+      padding: 13px 16px;
+      font-size: 1.05rem;
+      background-color: #111111;
+      color: #ffffff;
+      border: 2px solid #333333;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+    }
+
+    #capital-input:focus {
+      border-color: #666666;
+    }
+
+    #capital-input.correct {
+      border-color: #22c55e;
+      background-color: rgba(34, 197, 94, 0.16);
+      color: #86efac;
+    }
+
+    #capital-input.wrong {
+      border-color: #ef4444;
+      background-color: rgba(239, 68, 68, 0.16);
+      color: #fca5a5;
+    }
+
+    .dropdown {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background-color: #161616;
+      border: 1px solid #333333;
+      border-radius: 10px;
+      max-height: 190px;
+      overflow-y: auto;
+      z-index: 100;
+      text-align: left;
+      display: none;
+      box-shadow: 0 -10px 26px rgba(0, 0, 0, 0.85);
+    }
+
+    .dropdown.open {
+      display: block;
+    }
+
+    .dropdown-item {
+      padding: 10px 14px;
+      font-size: 0.96rem;
+      cursor: pointer;
+      border-bottom: 1px solid #222222;
+      color: #e5e5e5;
+    }
+
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-item:hover,
+    .dropdown-item.active {
+      background-color: #2a2a2a;
+      color: #ffffff;
+    }
+
+    .capital-feedback {
+      min-height: 22px;
+      margin-top: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .capital-feedback.correct {
+      color: #4ade80;
+    }
+
+    .capital-feedback.wrong {
+      color: #f87171;
+    }
+
+    #next-btn {
+      width: auto;
+      min-width: 180px;
+      margin-top: 6px;
+    }
+
+    /* Экран результатов */
+    .results-container {
+      width: 100%;
+      max-width: 820px;
+      text-align: center;
+    }
+
+    .results-summary {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid #262626;
+      border-radius: 12px;
+      background-color: #0a0a0a;
+      margin-bottom: 24px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.93rem;
+    }
+
+    th {
+      padding: 13px 14px;
+      background-color: #141414;
+      color: #999999;
+      font-weight: 600;
+      border-bottom: 1px solid #262626;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #1c1c1c;
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .text-green {
+      color: #4ade80;
+      font-weight: 600;
+    }
+
+    .text-red {
+      color: #f87171;
+      font-weight: 600;
+    }
+
+    .sub-note {
+      font-size: 0.82rem;
+      color: #999999;
+      margin-top: 3px;
+    }
+
+    .mnemonic-box {
+      margin-top: 6px;
+      font-size: 0.84rem;
+      line-height: 1.4;
+      color: #fca5a5;
+      background-color: rgba(239, 68, 68, 0.12);
+      border-left: 2px solid #ef4444;
+      padding: 6px 10px;
+      border-radius: 4px;
+    }
+
+    #restart-btn {
+      width: auto;
+      min-width: 210px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Экран 1: Настройка перед началом -->
+  <section id="start-screen" class="start-container">
+    <h1 class="start-title">Карта Европы</h1>
+    <p class="start-subtitle">28 стран · Нажимайте на заданную страну на карте</p>
+
+    <label class="setting-row" for="ask-capital-toggle">
+      <div>
+        <div class="setting-label">Спрашивать столицу</div>
+        <div class="setting-hint">Проверка столицы после выбора страны на карте</div>
+      </div>
+      <span class="switch">
+        <input id="ask-capital-toggle" type="checkbox" checked />
+        <span class="slider"></span>
+      </span>
+    </label>
+
+    <button id="start-btn" class="primary-btn" type="button" disabled>Загрузка карты...</button>
+  </section>
+
+  <!-- Экран 2: Прохождение теста -->
+  <main id="quiz-screen" class="quiz-container hidden">
+    <div class="quiz-header">
+      <div id="progress" class="progress">Вопрос 1 из 28</div>
+      <div id="target-country" class="target-country">🇫🇷 Франция</div>
+    </div>
+
+    <div id="map-box" class="map-box map-interactive">
+      <svg id="europe-svg" viewBox="0 0 900 590" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="zoom-controls">
+        <button id="zoom-in" class="zoom-btn" type="button" title="Приблизить">+</button>
+        <button id="zoom-out" class="zoom-btn" type="button" title="Отдалить">−</button>
+        <button id="zoom-reset" class="zoom-btn" type="button" title="Сбросить масштаб">↺</button>
+      </div>
+    </div>
+
+    <div id="map-status" class="map-status">Нажмите на страну на карте</div>
+
+    <div id="capital-section" class="capital-section hidden">
+      <div id="capital-prompt" class="capital-prompt">Введите столицу:</div>
+      <div class="input-wrapper">
+        <input
+          id="capital-input"
+          type="text"
+          placeholder="Столица..."
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        />
+        <div id="dropdown" class="dropdown"></div>
+      </div>
+      <div id="capital-feedback" class="capital-feedback"></div>
+    </div>
+
+    <button id="next-btn" class="primary-btn" type="button" disabled>Далее</button>
+  </main>
+
+  <!-- Экран 3: Итоговая таблица -->
+  <section id="results-screen" class="results-container hidden">
+    <div id="results-summary" class="results-summary"></div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr id="results-head-row"></tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+      </table>
+    </div>
+
+    <button id="restart-btn" class="primary-btn" type="button">Перепройти тест</button>
+  </section>
+
+  <script>
+    const EUROPE_TEST_DATA = [
+      {
+        id: "250",
+        flag: "🇫🇷",
+        country: "Франция",
+        capital: "Париж",
+        mnemonic: "Франция → Эйфелева башня, Лувр и круассаны в Париже."
+      },
+      {
+        id: "276",
+        flag: "🇩🇪",
+        country: "Германия",
+        capital: "Берлин",
+        mnemonic: "Германия → Берлинская стена и символ города — медведь (нем. Bär)."
+      },
+      {
+        id: "380",
+        flag: "🇮🇹",
+        country: "Италия",
+        capital: "Рим",
+        mnemonic: "Италия — наследница Римской империи, «все дороги ведут в Рим»."
+      },
+      {
+        id: "724",
+        flag: "🇪🇸",
+        country: "Испания",
+        capital: "Мадрид",
+        mnemonic: "Испанский футбольный клуб «Реал Мадрид» — прямая привязка к столице."
+      },
+      {
+        id: "826",
+        flag: "🇬🇧",
+        country: "Великобритания",
+        capital: "Лондон",
+        mnemonic: "Базовая пара из школьного английского: «London is the capital of Great Britain»."
+      },
+      {
+        id: "040",
+        flag: "🇦🇹",
+        country: "Австрия",
+        capital: "Вена",
+        mnemonic: "Австрия → Венский вальс, венский штрудель и венская опера."
+      },
+      {
+        id: "008",
+        flag: "🇦🇱",
+        country: "Албания",
+        capital: "Тирана",
+        mnemonic: "Албания → Тирана (созвучно со словом «тиран»)."
+      },
+      {
+        id: "112",
+        flag: "🇧🇾",
+        country: "Беларусь",
+        capital: "Минск",
+        mnemonic: "Минск — единственный город-миллионник Беларуси; начинается на «М», как и соседняя Москва."
+      },
+      {
+        id: "056",
+        flag: "🇧🇪",
+        country: "Бельгия",
+        capital: "Брюссель",
+        mnemonic: "Бельгия → Брюссельская капуста, бельгийские вафли и штаб-квартира Евросоюза."
+      },
+      {
+        id: "336",
+        flag: "🇻🇦",
+        country: "Ватикан",
+        capital: "Ватикан",
+        coords: [12.4534, 41.9029],
+        mnemonic: "Государство-анклав внутри Рима: название страны и столицы совпадают."
+      },
+      {
+        id: "300",
+        flag: "🇬🇷",
+        country: "Греция",
+        capital: "Афины",
+        mnemonic: "Греция — родина античных мифов, столица названа в честь Афины — богини мудрости."
+      },
+      {
+        id: "208",
+        flag: "🇩🇰",
+        country: "Дания",
+        capital: "Копенгаген",
+        mnemonic: "Датский сказочник Андерсен жил в Копенгагене, там же стоит памятник его Русалочке."
+      },
+      {
+        id: "372",
+        flag: "🇮🇪",
+        country: "Ирландия",
+        capital: "Дублин",
+        mnemonic: "В Ирландии много «дубов» (Дублин) и знаменитая пивоварня Guinness."
+      },
+      {
+        id: "352",
+        flag: "🇮🇸",
+        country: "Исландия",
+        capital: "Рейкьявик",
+        mnemonic: "Исландия — «страна льдов», а Рейкьявик переводится как «дымящаяся бухта» из-за гейзеров."
+      },
+      {
+        id: "428",
+        flag: "🇱🇻",
+        country: "Латвия",
+        capital: "Рига",
+        mnemonic: "Латвия → Рижский бальзам и Рижский залив Балтийского моря."
+      },
+      {
+        id: "440",
+        flag: "🇱🇹",
+        country: "Литва",
+        capital: "Вильнюс",
+        mnemonic: "В названии страны одна буква «и» (Литва → Вильнюс), в отличие от Латвии (Рига)."
+      },
+      {
+        id: "442",
+        flag: "🇱🇺",
+        country: "Люксембург",
+        capital: "Люксембург",
+        coords: [6.1296, 49.8153],
+        mnemonic: "Карликовое государство, где название столицы полностью совпадает со страной."
+      },
+      {
+        id: "492",
+        flag: "🇲🇨",
+        country: "Монако",
+        capital: "Монако",
+        coords: [7.4246, 43.7384],
+        mnemonic: "Карликовое государство-город на Лазурном Берегу: название страны и столицы совпадают."
+      },
+      {
+        id: "528",
+        flag: "🇳🇱",
+        country: "Нидерланды",
+        capital: "Амстердам",
+        mnemonic: "Нидерланды («низкие земли») лежат ниже уровня моря, от воды город защищают дамбы — Амстер-дам."
+      },
+      {
+        id: "578",
+        flag: "🇳🇴",
+        country: "Норвегия",
+        capital: "Осло",
+        mnemonic: "Короткие названия: в Норвегии холодно, а в Осло «осы» не летают."
+      },
+      {
+        id: "616",
+        flag: "🇵🇱",
+        country: "Польша",
+        capital: "Варшава",
+        mnemonic: "Польша → Варшавское шоссе и исторический Варшавский договор."
+      },
+      {
+        id: "674",
+        flag: "🇸🇲",
+        country: "Сан-Марино",
+        capital: "Сан-Марино",
+        coords: [12.4578, 43.9424],
+        mnemonic: "Анклав внутри Италии: название столицы полностью совпадает с названием страны."
+      },
+      {
+        id: "688",
+        flag: "🇷🇸",
+        country: "Сербия",
+        capital: "Белград",
+        mnemonic: "Белград переводится как «Белый город» — главная крепость на слиянии Савы и Дуная."
+      },
+      {
+        id: "246",
+        flag: "🇫🇮",
+        country: "Финляндия",
+        capital: "Хельсинки",
+        mnemonic: "Финляндия — страна холода, а Хельсинки созвучно со скандинавской богиней холода Хель."
+      },
+      {
+        id: "203",
+        flag: "🇨🇿",
+        country: "Чехия",
+        capital: "Прага",
+        mnemonic: "Чехия → Карлов мост, пражский торт и Староместская площадь в Праге."
+      },
+      {
+        id: "756",
+        flag: "🇨🇭",
+        country: "Швейцария",
+        capital: "Берн",
+        mnemonic: "Швейцария — не Женева и не Цюрих, а Берн (от нем. Bär — «медведь», изображён на гербе города)."
+      },
+      {
+        id: "752",
+        flag: "🇸🇪",
+        country: "Швеция",
+        capital: "Стокгольм",
+        mnemonic: "Шведская писательница Астрид Линдгрен поселила Карлсона на крыше в Стокгольме."
+      },
+      {
+        id: "233",
+        flag: "🇪🇪",
+        country: "Эстония",
+        capital: "Таллин",
+        mnemonic: "Самая северная из стран Балтии, созвучно со словом «талый» снег."
+      }
+    ];
+
+    // Все европейские страны на карте (для корректного определения случайного клика)
+    const ALL_EUROPE_META = {
+      "008": { flag: "🇦🇱", name: "Албания" },
+      "020": { flag: "🇦🇩", name: "Андорра" },
+      "040": { flag: "🇦🇹", name: "Австрия" },
+      "056": { flag: "🇧🇪", name: "Бельгия" },
+      "070": { flag: "🇧🇦", name: "Босния и Герцеговина" },
+      "100": { flag: "🇧🇬", name: "Болгария" },
+      "112": { flag: "🇧🇾", name: "Беларусь" },
+      "191": { flag: "🇭🇷", name: "Хорватия" },
+      "196": { flag: "🇨🇾", name: "Кипр" },
+      "203": { flag: "🇨🇿", name: "Чехия" },
+      "208": { flag: "🇩🇰", name: "Дания" },
+      "233": { flag: "🇪🇪", name: "Эстония" },
+      "246": { flag: "🇫🇮", name: "Финляндия" },
+      "250": { flag: "🇫🇷", name: "Франция" },
+      "276": { flag: "🇩🇪", name: "Германия" },
+      "300": { flag: "🇬🇷", name: "Греция" },
+      "336": { flag: "🇻🇦", name: "Ватикан" },
+      "348": { flag: "🇭🇺", name: "Венгрия" },
+      "352": { flag: "🇮🇸", name: "Исландия" },
+      "372": { flag: "🇮🇪", name: "Ирландия" },
+      "380": { flag: "🇮🇹", name: "Италия" },
+      "428": { flag: "🇱🇻", name: "Латвия" },
+      "438": { flag: "🇱🇮", name: "Лихтенштейн" },
+      "440": { flag: "🇱🇹", name: "Литва" },
+      "442": { flag: "🇱🇺", name: "Люксембург" },
+      "470": { flag: "🇲🇹", name: "Мальта" },
+      "492": { flag: "🇲🇨", name: "Монако" },
+      "498": { flag: "🇲🇩", name: "Молдова" },
+      "499": { flag: "🇲🇪", name: "Черногория" },
+      "528": { flag: "🇳🇱", name: "Нидерланды" },
+      "578": { flag: "🇳🇴", name: "Норвегия" },
+      "616": { flag: "🇵🇱", name: "Польша" },
+      "620": { flag: "🇵🇹", name: "Португалия" },
+      "642": { flag: "🇷🇴", name: "Румыния" },
+      "643": { flag: "🇷🇺", name: "Россия" },
+      "674": { flag: "🇸🇲", name: "Сан-Марино" },
+      "688": { flag: "🇷🇸", name: "Сербия" },
+      "703": { flag: "🇸🇰", name: "Словакия" },
+      "705": { flag: "🇸🇮", name: "Словения" },
+      "724": { flag: "🇪🇸", name: "Испания" },
+      "752": { flag: "🇸🇪", name: "Швеция" },
+      "756": { flag: "🇨🇭", name: "Швейцария" },
+      "804": { flag: "🇺🇦", name: "Украина" },
+      "807": { flag: "🇲🇰", name: "Северная Македония" },
+      "826": { flag: "🇬🇧", name: "Великобритания" },
+      "-99": { flag: "🇽🇰", name: "Косово" }
+    };
+
+    const PRAISES = [
+      "Молодец, умница!",
+      "Верно, так держать!",
+      "Отлично, в точку!",
+      "Правильно, умница!",
+      "Безупречно!"
+    ];
+
+    const ALL_CAPITALS = [...new Set(EUROPE_TEST_DATA.map((item) => item.capital))].sort((a, b) =>
+      a.localeCompare(b, "ru")
+    );
+
+    // Элементы интерфейса
+    const startScreen = document.getElementById("start-screen");
+    const askCapitalToggle = document.getElementById("ask-capital-toggle");
+    const startBtn = document.getElementById("start-btn");
+
+    const quizScreen = document.getElementById("quiz-screen");
+    const progressEl = document.getElementById("progress");
+    const targetCountryEl = document.getElementById("target-country");
+    const mapBoxEl = document.getElementById("map-box");
+    const mapStatusEl = document.getElementById("map-status");
+
+    const capitalSectionEl = document.getElementById("capital-section");
+    const capitalPromptEl = document.getElementById("capital-prompt");
+    const inputEl = document.getElementById("capital-input");
+    const dropdownEl = document.getElementById("dropdown");
+    const capitalFeedbackEl = document.getElementById("capital-feedback");
+    const nextBtn = document.getElementById("next-btn");
+
+    const resultsScreen = document.getElementById("results-screen");
+    const resultsSummaryEl = document.getElementById("results-summary");
+    const resultsHeadRowEl = document.getElementById("results-head-row");
+    const resultsBodyEl = document.getElementById("results-body");
+    const restartBtn = document.getElementById("restart-btn");
+
+    // Состояние игры
+    let askCapitalEnabled = true;
+    let questions = [];
+    let currentIndex = 0;
+    let mapAnswered = false;
+    let capitalAnswered = false;
+    let currentMapResult = null;
+    let currentCapitalResult = null;
+    let sessionResults = [];
+
+    let filteredMatches = [];
+    let activeDropdownIndex = 0;
+
+    // D3 объекты
+    let svg, mapGroup, zoomBehavior, projection;
+    let currentZoomK = 1;
+
+    function normalize(str) {
+      return str.trim().toLowerCase().replace(/ё/g, "е");
+    }
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    // Инициализация карты Европы
+    async function initMap() {
+      try {
+        const response = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json");
+        const world = await response.json();
+        const countries = topojson.feature(world, world.objects.countries).features;
+
+        svg = d3.select("#europe-svg");
+        mapGroup = svg.append("g");
+
+        projection = d3.geoMercator()
+          .center([14.5, 54.5])
+          .scale(610)
+          .translate([450, 295]);
+
+        const pathGenerator = d3.geoPath().projection(projection);
+
+        // Отрисовка полигонов стран
+        mapGroup.selectAll("path")
+          .data(countries)
+          .enter()
+          .append("path")
+          .attr("d", pathGenerator)
+          .attr("data-id", (d) => String(d.id).padStart(3, "0"))
+          .attr("class", (d) => {
+            const id = String(d.id).padStart(3, "0");
+            return ALL_EUROPE_META[id] ? "country-shape" : "land-other";
+          })
+          .on("click", function (event, d) {
+            event.stopPropagation();
+            const id = String(d.id).padStart(3, "0");
+            if (ALL_EUROPE_META[id]) {
+              handleCountrySelection(id);
+            }
+          });
+
+        // Интерактивные точки для микрогосударств (Ватикан, Монако, Сан-Марино, Люксембург)
+        const pinCountries = EUROPE_TEST_DATA.filter((item) => Array.isArray(item.coords));
+
+        mapGroup.selectAll("circle.microstate-pin")
+          .data(pinCountries)
+          .enter()
+          .append("circle")
+          .attr("class", "microstate-pin")
+          .attr("data-id", (d) => d.id)
+          .attr("cx", (d) => projection(d.coords)[0])
+          .attr("cy", (d) => projection(d.coords)[1])
+          .attr("r", 5.5)
+          .on("click", function (event, d) {
+            event.stopPropagation();
+            handleCountrySelection(d.id);
+          });
+
+        // Зум и панорамирование
+        zoomBehavior = d3.zoom()
+          .scaleExtent([1, 8])
+          .translateExtent([[0, 0], [900, 590]])
+          .on("zoom", (event) => {
+            currentZoomK = event.transform.k;
+            mapGroup.attr("transform", event.transform);
+            mapGroup.selectAll(".country-shape").style("stroke-width", `${0.7 / currentZoomK}px`);
+            mapGroup.selectAll(".land-other").style("stroke-width", `${0.5 / currentZoomK}px`);
+            mapGroup.selectAll(".microstate-pin")
+              .attr("r", 5.5 / currentZoomK)
+              .style("stroke-width", `${1.2 / currentZoomK}px`);
+          });
+
+        svg.call(zoomBehavior);
+
+        document.getElementById("zoom-in").addEventListener("click", () => {
+          svg.transition().duration(220).call(zoomBehavior.scaleBy, 1.6);
+        });
+        document.getElementById("zoom-out").addEventListener("click", () => {
+          svg.transition().duration(220).call(zoomBehavior.scaleBy, 1 / 1.6);
+        });
+        document.getElementById("zoom-reset").addEventListener("click", resetMapZoom);
+
+        startBtn.disabled = false;
+        startBtn.textContent = "Начать тест";
+      } catch (err) {
+        startBtn.textContent = "Ошибка загрузки карты (обновите страницу)";
+      }
+    }
+
+    function resetMapZoom() {
+      if (svg && zoomBehavior) {
+        svg.transition().duration(250).call(zoomBehavior.transform, d3.zoomIdentity);
+      }
+    }
+
+    function clearMapHighlights() {
+      if (!mapGroup) return;
+      mapGroup.selectAll(".country-shape, .microstate-pin")
+        .classed("correct", false)
+        .classed("wrong", false);
+    }
+
+    function highlightCountryOnMap(countryId, statusClass) {
+      mapGroup.selectAll(`[data-id="${countryId}"]`).classed(statusClass, true);
+    }
+
+    function startTest() {
+      askCapitalEnabled = askCapitalToggle.checked;
+      questions = shuffleArray(EUROPE_TEST_DATA);
+      currentIndex = 0;
+      sessionResults = [];
+
+      startScreen.classList.add("hidden");
+      resultsScreen.classList.add("hidden");
+      quizScreen.classList.remove("hidden");
+
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const q = questions[currentIndex];
+      mapAnswered = false;
+      capitalAnswered = false;
+      currentMapResult = null;
+      currentCapitalResult = null;
+
+      progressEl.textContent = `Вопрос ${currentIndex + 1} из ${questions.length}`;
+      targetCountryEl.textContent = `${q.flag} ${q.country}`;
+
+      clearMapHighlights();
+      mapBoxEl.classList.add("map-interactive");
+      mapStatusEl.textContent = "Нажмите на страну на карте";
+      mapStatusEl.className = "map-status";
+
+      capitalSectionEl.classList.add("hidden");
+      inputEl.value = "";
+      inputEl.readOnly = false;
+      inputEl.className = "";
+      capitalFeedbackEl.textContent = "";
+      capitalFeedbackEl.className = "capital-feedback";
+      closeDropdown();
+
+      nextBtn.disabled = true;
+      nextBtn.textContent = currentIndex === questions.length - 1 ? "Завершить тест" : "Далее";
+    }
+
+    function handleCountrySelection(clickedId) {
+      if (mapAnswered) return;
+      mapAnswered = true;
+      mapBoxEl.classList.remove("map-interactive");
+
+      const q = questions[currentIndex];
+      const isMapCorrect = clickedId === q.id;
+      const clickedMeta = ALL_EUROPE_META[clickedId] || { flag: "", name: "Неизвестно" };
+
+      if (isMapCorrect) {
+        highlightCountryOnMap(q.id, "correct");
+        mapStatusEl.textContent = `✅ Верно! Это ${q.flag} ${q.country}`;
+        mapStatusEl.className = "map-status correct";
+      } else {
+        highlightCountryOnMap(clickedId, "wrong");
+        highlightCountryOnMap(q.id, "correct");
+        mapStatusEl.textContent = `❌ Неверно (выбрано: ${clickedMeta.flag} ${clickedMeta.name}). Нужная страна выделена зелёным`;
+        mapStatusEl.className = "map-status wrong";
+      }
+
+      currentMapResult = {
+        isCorrect: isMapCorrect,
+        clickedLabel: `${clickedMeta.flag} ${clickedMeta.name}`.trim()
+      };
+
+      if (askCapitalEnabled) {
+        capitalPromptEl.textContent = `Теперь введите столицу (${q.flag} ${q.country}):`;
+        capitalSectionEl.classList.remove("hidden");
+        setTimeout(() => inputEl.focus(), 50);
+      } else {
+        nextBtn.disabled = false;
+      }
+    }
+
+    // Автодополнение для столицы
+    function closeDropdown() {
+      dropdownEl.classList.remove("open");
+      dropdownEl.innerHTML = "";
+      filteredMatches = [];
+      activeDropdownIndex = 0;
+    }
+
+    function renderDropdown(query) {
+      const normQuery = normalize(query);
+      if (!normQuery || capitalAnswered) {
+        closeDropdown();
+        return;
+      }
+
+      const startsWith = ALL_CAPITALS.filter((cap) =>
+        normalize(cap).startsWith(normQuery)
+      );
+      const includes = ALL_CAPITALS.filter(
+        (cap) => !normalize(cap).startsWith(normQuery) && normalize(cap).includes(normQuery)
+      );
+
+      filteredMatches = [...startsWith, ...includes].slice(0, 7);
+      activeDropdownIndex = 0;
+
+      if (filteredMatches.length === 0) {
+        closeDropdown();
+        return;
+      }
+
+      dropdownEl.innerHTML = "";
+      filteredMatches.forEach((capital, idx) => {
+        const div = document.createElement("div");
+        div.className = "dropdown-item" + (idx === activeDropdownIndex ? " active" : "");
+        div.textContent = capital;
+        div.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          selectCapital(capital);
+        });
+        dropdownEl.appendChild(div);
+      });
+
+      dropdownEl.classList.add("open");
+    }
+
+    function updateActiveDropdownItem() {
+      const items = dropdownEl.querySelectorAll(".dropdown-item");
+      items.forEach((item, idx) => {
+        item.classList.toggle("active", idx === activeDropdownIndex);
+      });
+    }
+
+    function selectCapital(capital) {
+      inputEl.value = capital;
+      closeDropdown();
+      checkCapitalAnswer(capital);
+    }
+
+    function checkCapitalAnswer(rawValue) {
+      if (!mapAnswered || capitalAnswered) return;
+      const trimmed = rawValue.trim();
+      if (!trimmed) return;
+
+      capitalAnswered = true;
+      inputEl.readOnly = true;
+      closeDropdown();
+
+      const q = questions[currentIndex];
+      const isCapCorrect = normalize(trimmed) === normalize(q.capital);
+
+      if (isCapCorrect) {
+        inputEl.classList.add("correct");
+        const praise = PRAISES[Math.floor(Math.random() * PRAISES.length)];
+        capitalFeedbackEl.textContent = praise;
+        capitalFeedbackEl.className = "capital-feedback correct";
+      } else {
+        inputEl.classList.add("wrong");
+        capitalFeedbackEl.textContent = `Неверно. Правильная столица: ${q.capital}`;
+        capitalFeedbackEl.className = "capital-feedback wrong";
+      }
+
+      currentCapitalResult = {
+        isCorrect: isCapCorrect,
+        userAnswer: trimmed
+      };
+
+      nextBtn.disabled = false;
+    }
+
+    function goToNextStep() {
+      if (!mapAnswered) return;
+      if (askCapitalEnabled && !capitalAnswered) return;
+
+      const q = questions[currentIndex];
+      sessionResults.push({
+        question: q,
+        mapResult: currentMapResult,
+        capitalResult: currentCapitalResult
+      });
+
+      currentIndex++;
+      if (currentIndex < questions.length) {
+        renderQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      quizScreen.classList.add("hidden");
+      resultsScreen.classList.remove("hidden");
+
+      const mapCorrect = sessionResults.filter((r) => r.mapResult.isCorrect).length;
+      const mapWrong = sessionResults.length - mapCorrect;
+
+      if (askCapitalEnabled) {
+        const capCorrect = sessionResults.filter((r) => r.capitalResult.isCorrect).length;
+        const capWrong = sessionResults.length - capCorrect;
+        resultsSummaryEl.innerHTML = `
+          <span>Карта: ✅ ${mapCorrect} | ❌ ${mapWrong}</span>
+          <span>Столицы: ✅ ${capCorrect} | ❌ ${capWrong}</span>
+        `;
+        resultsHeadRowEl.innerHTML = `
+          <th>Страна</th>
+          <th>Карта</th>
+          <th>Столица</th>
+        `;
+      } else {
+        resultsSummaryEl.innerHTML = `<span>Карта: ✅ ${mapCorrect} | ❌ ${mapWrong}</span>`;
+        resultsHeadRowEl.innerHTML = `
+          <th>Страна</th>
+          <th>Результат на карте</th>
+        `;
+      }
+
+      resultsBodyEl.innerHTML = "";
+
+      sessionResults.forEach((entry) => {
+        const { question, mapResult, capitalResult } = entry;
+        const tr = document.createElement("tr");
+
+        // Колонка 1: Страна с флагом
+        const tdCountry = document.createElement("td");
+        const allOk = mapResult.isCorrect && (!askCapitalEnabled || capitalResult.isCorrect);
+        tdCountry.className = allOk ? "text-green" : "text-red";
+        tdCountry.textContent = `${question.flag} ${question.country}`;
+        tr.appendChild(tdCountry);
+
+        // Колонка 2: Результат на карте
+        const tdMap = document.createElement("td");
+        if (mapResult.isCorrect) {
+          tdMap.innerHTML = `<span class="text-green">Найдено верно</span>`;
+        } else {
+          tdMap.innerHTML = `
+            <span class="text-red">Ошибка</span>
+            <div class="sub-note">Выбрано: ${mapResult.clickedLabel}</div>
+          `;
+        }
+        tr.appendChild(tdMap);
+
+        // Колонка 3: Столица (если включена)
+        if (askCapitalEnabled) {
+          const tdCap = document.createElement("td");
+          if (capitalResult.isCorrect) {
+            tdCap.innerHTML = `<span class="text-green">${question.capital}</span>`;
+          } else {
+            tdCap.innerHTML = `
+              <span class="text-red">${capitalResult.userAnswer}</span>
+              <div class="sub-note">Правильно: <strong>${question.capital}</strong></div>
+              <div class="mnemonic-box">Мнемоника: ${question.mnemonic}</div>
+            `;
+          }
+          tr.appendChild(tdCap);
+        }
+
+        resultsBodyEl.appendChild(tr);
+      });
+    }
+
+    // События
+    startBtn.addEventListener("click", startTest);
+    nextBtn.addEventListener("click", goToNextStep);
+
+    restartBtn.addEventListener("click", () => {
+      resetMapZoom();
+      resultsScreen.classList.add("hidden");
+      startScreen.classList.remove("hidden");
+    });
+
+    inputEl.addEventListener("input", () => {
+      renderDropdown(inputEl.value);
+    });
+
+    inputEl.addEventListener("keydown", (e) => {
+      if (capitalAnswered) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          goToNextStep();
+        }
+        return;
+      }
+
+      if (dropdownEl.classList.contains("open") && filteredMatches.length > 0) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          activeDropdownIndex = (activeDropdownIndex + 1) % filteredMatches.length;
+          updateActiveDropdownItem();
+          return;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          activeDropdownIndex =
+            (activeDropdownIndex - 1 + filteredMatches.length) % filteredMatches.length;
+          updateActiveDropdownItem();
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          closeDropdown();
+          return;
+        }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          selectCapital(filteredMatches[activeDropdownIndex]);
+          return;
+        }
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        checkCapitalAnswer(inputEl.value);
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (
+        e.key === "Enter" &&
+        !quizScreen.classList.contains("hidden") &&
+        !nextBtn.disabled &&
+        document.activeElement !== inputEl
+      ) {
+        e.preventDefault();
+        goToNextStep();
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".input-wrapper")) {
+        closeDropdown();
+      }
+    });
+
+    initMap();
+  </script>
+</body>
+</html>
