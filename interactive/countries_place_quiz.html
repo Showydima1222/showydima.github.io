@@ -172,7 +172,7 @@
       width: 100%;
       aspect-ratio: 16 / 10.5;
       max-height: 540px;
-      background-color: #080808; /* Оттенок серого 1: фон карты */
+      background-color: #080808;
       border: 1px solid #262626;
       border-radius: 14px;
       overflow: hidden;
@@ -192,22 +192,28 @@
     }
 
     .land-other {
-      fill: #141414; /* Оттенок серого 2: суша вне Европы */
-      stroke: #484848; /* Оттенок серого 5: границы */
+      fill: #111111;
+      stroke: #383838;
       stroke-width: 0.5px;
       pointer-events: none;
     }
 
+    /* 5 оттенков серого для стран Европы */
     .country-shape {
-      fill: #222222; /* Оттенок серого 3: страны Европы */
-      stroke: #484848; /* Оттенок серого 5: границы */
-      stroke-width: 0.7px;
+      stroke: #4d4d4d;
+      stroke-width: 0.75px;
       cursor: pointer;
       transition: fill 0.12s ease;
     }
 
+    .country-shape.shade-0 { fill: #1a1a1a; }
+    .country-shape.shade-1 { fill: #212121; }
+    .country-shape.shade-2 { fill: #282828; }
+    .country-shape.shade-3 { fill: #2f2f2f; }
+    .country-shape.shade-4 { fill: #363636; }
+
     .map-interactive .country-shape:hover {
-      fill: #333333; /* Оттенок серого 4: наведение */
+      fill: #474747;
     }
 
     .country-shape.correct {
@@ -221,15 +227,15 @@
     }
 
     .microstate-pin {
-      fill: #333333; /* Оттенок серого 4 */
-      stroke: #484848; /* Оттенок серого 5 */
+      fill: #3d3d3d;
+      stroke: #666666;
       stroke-width: 1.2px;
       cursor: pointer;
       transition: fill 0.12s ease;
     }
 
     .map-interactive .microstate-pin:hover {
-      fill: #484848;
+      fill: #555555;
     }
 
     .microstate-pin.correct {
@@ -817,7 +823,6 @@
       a.localeCompare(b, "ru")
     );
 
-    // Элементы интерфейса
     const startScreen = document.getElementById("start-screen");
     const askCapitalToggle = document.getElementById("ask-capital-toggle");
     const startBtn = document.getElementById("start-btn");
@@ -841,7 +846,6 @@
     const resultsBodyEl = document.getElementById("results-body");
     const restartBtn = document.getElementById("restart-btn");
 
-    // Состояние игры
     let askCapitalEnabled = true;
     let questions = [];
     let currentIndex = 0;
@@ -854,7 +858,6 @@
     let filteredMatches = [];
     let activeDropdownIndex = 0;
 
-    // D3 объекты
     let svg, mapGroup, zoomBehavior, projection;
     let currentZoomK = 1;
 
@@ -871,12 +874,35 @@
       return copy;
     }
 
-    // Инициализация карты Европы
+    // Раскраска графа смежности на 5 оттенков серого (соседние страны не совпадают по тону)
+    function computeCountryShades(geometries) {
+      const neighbors = topojson.neighbors(geometries);
+      const shades = new Array(geometries.length).fill(-1);
+
+      for (let i = 0; i < geometries.length; i++) {
+        const usedShades = new Set();
+        for (const neighborIdx of neighbors[i]) {
+          if (shades[neighborIdx] !== -1) {
+            usedShades.add(shades[neighborIdx]);
+          }
+        }
+        let chosen = 0;
+        while (usedShades.has(chosen) && chosen < 5) {
+          chosen++;
+        }
+        shades[i] = chosen < 5 ? chosen : i % 5;
+      }
+
+      return shades;
+    }
+
     async function initMap() {
       try {
         const response = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json");
         const world = await response.json();
+        const geometries = world.objects.countries.geometries;
         const countries = topojson.feature(world, world.objects.countries).features;
+        const countryShades = computeCountryShades(geometries);
 
         svg = d3.select("#europe-svg");
         mapGroup = svg.append("g");
@@ -888,16 +914,15 @@
 
         const pathGenerator = d3.geoPath().projection(projection);
 
-        // Отрисовка полигонов стран
         mapGroup.selectAll("path")
           .data(countries)
           .enter()
           .append("path")
           .attr("d", pathGenerator)
           .attr("data-id", (d) => String(d.id).padStart(3, "0"))
-          .attr("class", (d) => {
+          .attr("class", (d, i) => {
             const id = String(d.id).padStart(3, "0");
-            return ALL_EUROPE_META[id] ? "country-shape" : "land-other";
+            return ALL_EUROPE_META[id] ? `country-shape shade-${countryShades[i]}` : "land-other";
           })
           .on("click", function (event, d) {
             event.stopPropagation();
@@ -907,7 +932,6 @@
             }
           });
 
-        // Интерактивные точки для микрогосударств (Ватикан, Монако, Сан-Марино, Люксембург)
         const pinCountries = EUROPE_TEST_DATA.filter((item) => Array.isArray(item.coords));
 
         mapGroup.selectAll("circle.microstate-pin")
@@ -924,14 +948,13 @@
             handleCountrySelection(d.id);
           });
 
-        // Зум и панорамирование
         zoomBehavior = d3.zoom()
           .scaleExtent([1, 8])
           .translateExtent([[0, 0], [900, 590]])
           .on("zoom", (event) => {
             currentZoomK = event.transform.k;
             mapGroup.attr("transform", event.transform);
-            mapGroup.selectAll(".country-shape").style("stroke-width", `${0.7 / currentZoomK}px`);
+            mapGroup.selectAll(".country-shape").style("stroke-width", `${0.75 / currentZoomK}px`);
             mapGroup.selectAll(".land-other").style("stroke-width", `${0.5 / currentZoomK}px`);
             mapGroup.selectAll(".microstate-pin")
               .attr("r", 5.5 / currentZoomK)
@@ -1046,7 +1069,6 @@
       }
     }
 
-    // Автодополнение для столицы
     function closeDropdown() {
       dropdownEl.classList.remove("open");
       dropdownEl.innerHTML = "";
@@ -1187,14 +1209,12 @@
         const { question, mapResult, capitalResult } = entry;
         const tr = document.createElement("tr");
 
-        // Колонка 1: Страна с флагом
         const tdCountry = document.createElement("td");
         const allOk = mapResult.isCorrect && (!askCapitalEnabled || capitalResult.isCorrect);
         tdCountry.className = allOk ? "text-green" : "text-red";
         tdCountry.textContent = `${question.flag} ${question.country}`;
         tr.appendChild(tdCountry);
 
-        // Колонка 2: Результат на карте
         const tdMap = document.createElement("td");
         if (mapResult.isCorrect) {
           tdMap.innerHTML = `<span class="text-green">Найдено верно</span>`;
@@ -1206,7 +1226,6 @@
         }
         tr.appendChild(tdMap);
 
-        // Колонка 3: Столица (если включена)
         if (askCapitalEnabled) {
           const tdCap = document.createElement("td");
           if (capitalResult.isCorrect) {
@@ -1225,7 +1244,6 @@
       });
     }
 
-    // События
     startBtn.addEventListener("click", startTest);
     nextBtn.addEventListener("click", goToNextStep);
 
